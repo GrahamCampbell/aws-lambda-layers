@@ -430,6 +430,13 @@ ARG VERSION_PHP
 RUN curl --location --silent --show-error --fail https://www.php.net/get/php-${VERSION_PHP}.tar.gz/from/this/mirror \
   | tar xzC . --strip-components=1
 
+# Restore the ICU >= 53 guard around Spoofchecker's restriction-level APIs so that
+# ext/intl compiles against Amazon Linux 2's ICU 50.x (backport of
+# https://github.com/php/php-src/pull/22248). Remove once the layers use a PHP 8.4
+# release that already contains the fix.
+COPY php-84/spoofchecker-icu53.patch /tmp/spoofchecker-icu53.patch
+RUN patch -p1 < /tmp/spoofchecker-icu53.patch
+
 # Configure the build
 # -fstack-protector-strong : Be paranoid about stack overflows
 # -fpic : Make PHP's main executable position-independent (improves ASLR security mechanism, and has no performance impact on x86_64)
